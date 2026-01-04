@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok Chat Hub</title>
+    
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        :root {
+            --neon: #00ff9d; /* Green Neon */
+            --dark-bg: #0f172a; 
+            --panel: #1e293b;
+            --sent: #00d4ff; /* Blue for Sent Messages */
+            --received: #00ff9d; /* Green for Grok */
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        
+        body { 
+            background: var(--dark-bg); 
+            color: var(--sent); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 20px;
+        }
+
+        /* Title and Header */
+        h1 {
+            text-align: center; font-size: 1.8rem; margin-bottom: 20px;
+            color: var(--neon); text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+            flex-shrink: 0;
+        }
+
+        /* Chat Window */
+        #chat-window {
+            flex-grow: 1; 
+            background: var(--panel); 
+            border-radius: 15px;
+            padding: 15px; 
+            overflow-y: auto; 
+            margin-bottom: 15px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,255,157,0.2);
+        }
+
+        /* Input Bar */
+        #input-form {
+            display: flex; 
+            flex-shrink: 0;
+        }
+        #message-input {
+            flex-grow: 1; 
+            padding: 12px 15px; 
+            background: #2d3748; 
+            border: 1px solid var(--panel);
+            border-radius: 10px 0 0 10px; 
+            color: #fff; 
+            outline: none;
+            font-size: 1rem;
+        }
+        #send-button {
+            padding: 12px 20px; 
+            background: var(--neon); 
+            color: #000; 
+            border: none;
+            border-radius: 0 10px 10px 0; 
+            font-weight: bold; 
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 255, 157, 0.5);
+            transition: 0.2s;
+        }
+        #send-button:active { transform: scale(0.98); }
+
+        /* Message Styling */
+        .message-box {
+            display: flex; 
+            margin-bottom: 10px;
+        }
+        .message-box.sent {
+            justify-content: flex-end;
+        }
+        .message-content {
+            max-width: 80%; 
+            padding: 10px 15px; 
+            border-radius: 15px; 
+            line-height: 1.4;
+          font-size: 0.9rem;
+        }
+        .message-box.sent .message-content {
+            background: var(--sent); 
+            color: #000;
+            border-bottom-right-radius: 0;
+        }
+        .message-box.received .message-content {
+            background: var(--received); 
+            color: #000;
+            border-bottom-left-radius: 0;
+            margin-right: auto;
+        }
+        .message-box.system .message-content {
+            background: #555; 
+            color: #fff; 
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>GROK AI CHAT HUB</h1>
+
+    <div id="chat-window">
+        <!-- Messages will appear here -->
+        <div class="message-box system">
+            <div class="message-content">System: Grok Hub Initialized. Ask anything!</div>
+        </div>
+    </div>
+
+    <form id="input-form">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button type="submit" id="send-button">SEND</button>
+    </form>
+
+    <script>
+        const socket = io();
+        const chatWindow = document.getElementById('chat-window');
+        const inputForm = document.getElementById('input-form');
+        const messageInput = document.getElementById('message-input');
+      inputForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                // Send message to server
+                socket.emit('chat-message', message);
+                messageInput.value = '';
+            }
+        });
+
+        // Receive messages from server
+        socket.on('message', function(data) {
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('message-box', data.type);
+            
+            const messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+            messageContent.textContent = data.text;
+            
+            messageBox.appendChild(messageContent);
+            chatWindow.appendChild(messageBox);
+            
+            // Scroll to the latest message
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+
+        socket.on('connect', () => {
+             console.log('Connected to Chat Server');
+        });
+    </script>
+</body>
+</html>
