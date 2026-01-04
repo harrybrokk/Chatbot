@@ -1,148 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Chat Hub</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-
+    <title>Grok Test</title>
     <script src="/socket.io/socket.io.js"></script>
-
     <style>
-        :root {
-            --neon: #00ff9d; 
-            --dark-bg: #0f172a; 
-            --panel: #1e293b;
-            --sent: #00d4ff; 
-            --received: #00ff9d; 
-        }
-         { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        
-        html, body {
-            height: 100%; width: 100%; overflow: hidden;
-            background-color: var(--dark-bg); color: var(--text-primary);
-        }
-        body { display: flex; flex-direction: column; padding: 15px; }
-
-        .shiny-title {
-            font-size: 2.2rem; font-weight: 700; text-align: center;
-            background: linear-gradient(to right, var(--neon) 20%, #fff 40%, #fff 60%, var(--neon) 80%);
-            background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent; animation: shine 4s linear infinite;
-            letter-spacing: 2px; flex-shrink: 0; padding-bottom: 10px;
-        }
-        @keyframes shine { to { background-position: 200% center; } }
-        #chat-window {
-            flex-grow: 1; 
-            background: var(--panel); 
-            border-radius: 15px;
-            padding: 15px; 
-            overflow-y: auto; 
-            margin-bottom: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            border: 1px solid rgba(0,255,157,0.2);
-        }
-
-        #input-form { display: flex; flex-shrink: 0; }
-        #message-input {
-            flex-grow: 1; 
-            padding: 12px 15px; 
-            background: #2d3748; 
-            border: 1px solid var(--panel);
-            border-radius: 10px 0 0 10px; 
-            color: #fff; 
-            outline: none;
-            font-size: 1rem;
-        }
-        #send-button {
-            padding: 12px 20px; 
-            background: var(--neon); 
-            color: #000; 
-            border: none;
-            border-radius: 0 10px 10px 0; 
-            font-weight: bold; 
-            cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 255, 157, 0.5);
-            transition: 0.2s;
-        }
-        #send-button:active { transform: scale(0.98); }
-
-        .message-box { display: flex; margin-bottom: 10px; }
-        .message-box.sent { justify-content: flex-end; }
-        .message-content {
-            max-width: 80%; 
-            padding: 10px 15px; 
-            border-radius: 15px; 
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-        .message-box.sent .message-content {
-            background: var(--sent); 
-            color: #000;
-            border-bottom-right-radius: 0;
-        }
-        .message-box.received .message-content {
-            background: var(--received); 
-            color: #000;
-            border-bottom-left-radius: 0;
-            margin-right: auto;
-        }
-        .message-box.system .message-content {
-            background: #555; 
-            color: #fff; 
-            text-align: center;
-        }
+        body { background: #111; color: #fff; padding: 20px; font-family: monospace; }
+        #output { border: 1px solid green; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        .user { color: cyan; }
+        .grok { color: lightgreen; }
     </style>
 </head>
 <body>
-    <h1>GROK AI CHAT HUB</h1>
-
-    <div id="chat-window">
-        <div class="message-box system">
-            <div class="message-content">System: Grok Hub Initialized. Ask anything!</div>
-        </div>
-    </div>
-
-    <form id="input-form">
-        <input type="text" id="message-input" placeholder="Type your message...">
-        <button type="submit" id="send-button">SEND</button>
-    </form>
+    <h1>Grok AI Test Hub</h1>
+    <div id="output"></div>
+    <input type="text" id="input" placeholder="Type message..." style="width: 80%;">
+    <button onclick="sendMessage()">Send</button>
 
     <script>
         const socket = io();
-        const chatWindow = document.getElementById('chat-window');
-        const inputForm = document.getElementById('input-form');
-        const messageInput = document.getElementById('message-input');
+        const output = document.getElementById('output');
+        const input = document.getElementById('input');
 
-        inputForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            if (message) {
-                socket.emit('chat-message', message);
-                messageInput.value = '';
-            }
-        });
+        function log(user, text, className) {
+            const p = document.createElement('p');
+            p.innerHTML = `<span class="${className}">[${user}]:</span> ${text}`;
+            output.appendChild(p);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = input.value;
+            if (!message) return;
+            
+            log('You', message, 'user');
+            socket.emit('chat-message', message);
+            input.value = '';
+        }
 
         socket.on('message', function(data) {
-            const messageBox = document.createElement('div');
-            messageBox.classList.add('message-box', data.type);
-            
-            const messageContent = document.createElement('div');
-            messageContent.classList.add('message-content');
-            messageContent.textContent = data.text;
-            
-            messageBox.appendChild(messageContent);
-            chatWindow.appendChild(messageBox);
-            
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            log(data.user, data.text, data.type === 'sent' ? 'user' : 'grok');
         });
-
         socket.on('connect', () => {
-             console.log('Connected to Chat Server');
+             log('System', 'Connected to server', 'system');
         });
     </script>
 </body>
