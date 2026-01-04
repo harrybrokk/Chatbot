@@ -2,20 +2,66 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Grok Test</title>
+    <title>Gemini Test Hub</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { background: #111; color: #fff; padding: 20px; font-family: monospace; }
-        #output { border: 1px solid green; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
-        .user { color: cyan; }
-        .grok { color: lightgreen; }
+        body { 
+            background: #1e293b; 
+            color: #fff; 
+            padding: 20px; 
+            font-family: monospace; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            align-items: center;
+        }
+        #output { 
+            border: 1px solid #00ff9d; 
+            flex-grow: 1; 
+            width: 100%; 
+            max-width: 600px;
+            overflow-y: scroll; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border-radius: 10px;
+            background: #0f172a;
+        }
+        #input-container {
+            display: flex; 
+            width: 100%; 
+            max-width: 600px;
+            flex-shrink: 0;
+        }
+        #input { 
+            flex-grow: 1; 
+            padding: 10px; 
+            border: 1px solid #00ff9d; 
+            border-right: none;
+            border-radius: 5px 0 0 5px; 
+            background: #2d3748; 
+            color: #fff;
+            outline: none;
+        }
+        button {
+            padding: 10px 15px; 
+            background: #00ff9d; 
+            color: #000; 
+            border: none;
+            border-radius: 0 5px 5px 0; 
+            font-weight: bold;
+        }
+        .user-msg { color: cyan; margin-bottom: 5px; }
+        .gemini-msg { color: lightgreen; margin-bottom: 5px; }
+        .system-msg { color: yellow; margin-bottom: 5px; }
     </style>
 </head>
 <body>
-    <h1>Grok AI Test Hub</h1>
+    <h1>GEMINI AI TEST HUB</h1>
     <div id="output"></div>
-    <input type="text" id="input" placeholder="Type message..." style="width: 80%;">
-    <button onclick="sendMessage()">Send</button>
+    <div id="input-container">
+        <input type="text" id="input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
     <script>
         const socket = io();
@@ -33,16 +79,23 @@
             const message = input.value;
             if (!message) return;
             
-            log('You', message, 'user');
+            log('You', message, 'user-msg');
             socket.emit('chat-message', message);
             input.value = '';
         }
 
         socket.on('message', function(data) {
-            log(data.user, data.text, data.type === 'sent' ? 'user' : 'grok');
+            let className = 'system-msg';
+            if (data.type === 'sent') {
+                className = 'user-msg';
+            } else if (data.type === 'received') {
+                className = 'gemini-msg';
+            }
+            log(data.user, data.text, className);
         });
+
         socket.on('connect', () => {
-             log('System', 'Connected to server', 'system');
+             log('System', 'Connected to server', 'system-msg');
         });
     </script>
 </body>
