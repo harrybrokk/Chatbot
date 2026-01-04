@@ -1,0 +1,15 @@
+{
+  "name": "leo-grok-hub",
+  "version": "1.0.0",
+  "description": "Secure Grok AI Chat Hub",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "dotenv": "^16.4.5", 
+    "@xai-foundation/grok-api": "^0.1.0" 
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
