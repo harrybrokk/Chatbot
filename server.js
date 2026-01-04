@@ -1,15 +1,16 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const Grok = require('@xai-foundation/grok-api');
-const config = require('./config'); // Key ko import kiya
+const { GoogleGenAI } = require('@google/genai'); // Gemini Import
+const config = require('./config'); 
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Grok AI Initialization
-const grok = new Grok({ apiKey: config.GROK_API_KEY });
+// Gemini AI Initialization
+const ai = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
+const model = "gemini-2.5-flash"; // Fast Model
 
 app.use(express.static('public'));
 
@@ -18,21 +19,21 @@ io.on('connection', (socket) => {
         socket.emit('message', { user: 'You', text: message, type: 'sent' });
 
         try {
-            const completion = await grok.chat.completions.create({
-                model: 'grok-1.0',
-                messages: [{ role: 'user', content: message }],
-                temperature: 0.7,
+            const response = await ai.models.generateContent({
+                model: model,
+                contents: [{ role: 'user', parts: [{ text: message }] }],
             });
 
-            const grokResponse = completion.choices[0].message.content;
+            const geminiResponse = response.text;
             
-            socket.emit('message', { user: 'Grok', text: grokResponse, type: 'received' });
+            socket.emit('message', { user: 'Gemini', text: geminiResponse, type: 'received' });
 
         } catch (error) {
-            socket.emit('message', { user: 'System', text: 'Error: Connection failed.', type: 'system' });
+            console.error('Gemini AI Error:', error);
+            socket.emit('message', { user: 'System', text: 'Error: Connection failed. Check API Key.', type: 'system' });
         }
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Grok Hub Active on ${PORT}`));
+server.listen(PORT, () => console.log(`Gemini Hub Active on ${PORT}`));
